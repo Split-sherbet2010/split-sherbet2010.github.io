@@ -88,11 +88,13 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none
   <div class="row"><div>흑 금수<small>흑은 3·3, 4·4, 장목(6목 이상) 금지</small></div><input type="checkbox" id="cRenju"></div>
   <div class="row sub" id="rShow"><div>금수 자리 표시<small>흑 차례에 둘 수 없는 곳을 ✕로 표시</small></div><input type="checkbox" id="cShow"></div>
   <div class="row"><div>백 장목 승리 인정<small>끄면 백도 정확히 5목만 승리</small></div><input type="checkbox" id="cWOver"></div>
+  <div class="row"><div>🤖 AI와 대전<small>끄면 한 태블릿에서 둘이 번갈아 둬요</small></div><input type="checkbox" id="cAI"></div>
+  <div class="row sub" id="rColor"><div>내 돌 색</div><div class="seg" data-k="human"><button data-v="1">흑 (선공)</button><button data-v="2">백 (후공)</button></div></div>
+  <div class="row sub" id="rLv"><div>AI 난이도</div><div class="seg" data-k="level"><button data-v="0">쉬움</button><button data-v="1">중간</button><button data-v="2">어려움</button></div></div>
   <div class="acts"><button id="bReset">승수 초기화</button><button class="primary" id="bClose">닫기</button></div>
-  <p style="font-size:.78rem;text-align:left;margin:12px 0 0">판 크기나 규칙을 바꾸면 새 판이 시작돼요.</p>
+  <p style="font-size:.78rem;text-align:left;margin:12px 0 0">판 크기, 규칙, AI 대전, 돌 색을 바꾸면 새 판이 시작돼요.</p>
 </div></div>
-<script>
-// ---- 엔진 (브라우저/노드 공용) ----
+<script id="engsrc" type="text/plain">
 const E = (() => {
   const D = [[1,0],[0,1],[1,1],[1,-1]];
   const st = { N: 15, B: new Int8Array(225), renju: true, whiteOver: true };
@@ -100,14 +102,14 @@ const E = (() => {
   const put = (x,y,v) => { st.B[y*st.N+x] = v; };
   function reset(N){ st.N=N; st.B=new Int8Array(N*N); }
   function run(x,y,dx,dy,c){ let f=0,b=0; while(at(x+dx*(f+1),y+dy*(f+1))===c) f++; while(at(x-dx*(b+1),y-dy*(b+1))===c) b++; return [b,f]; }
+  // ---------- 렌주 금수 ----------
   function fourCount(x,y,dx,dy){
     const pts=[];
     for(let k=-4;k<=4;k++){ if(!k) continue; const qx=x+dx*k, qy=y+dy*k;
       if(at(qx,qy)!==0) continue; put(qx,qy,1); const [b,f]=run(x,y,dx,dy,1); if(b+f+1===5) pts.push(k); put(qx,qy,0); }
-    if(!pts.length) return 0;
-    if(pts.length===1) return 1;
-    if(pts.length===2 && Math.abs(pts[0]-pts[1])===5) return 1; // 열린 4 (_●●●●_)
-    return 2; // 한 줄 안의 4·4
+    if(!pts.length) return 0; if(pts.length===1) return 1;
+    if(pts.length===2 && Math.abs(pts[0]-pts[1])===5) return 1;
+    return 2;
   }
   function straightFour(x,y,dx,dy){
     const [b,f]=run(x,y,dx,dy,1); if(b+f+1!==4) return false;
@@ -121,7 +123,6 @@ const E = (() => {
       if(sf && !forbidden(qx,qy,depth+1)) return true; }
     return false;
   }
-  // 흑 금수 판정: null | '3·3' | '4·4' | '장목'
   function forbidden(x,y,depth=0){
     if(at(x,y)!==0 || depth>3) return null;
     put(x,y,1); let five=false, over=false;
@@ -129,21 +130,19 @@ const E = (() => {
     let res=null;
     if(!five){
       if(over) res='장목';
-      else {
-        const fd=D.map(([dx,dy])=>fourCount(x,y,dx,dy)); const fours=fd.reduce((a,b)=>a+b,0);
+      else { const fd=D.map(([dx,dy])=>fourCount(x,y,dx,dy)); const fours=fd[0]+fd[1]+fd[2]+fd[3];
         if(fours>=2) res='4·4';
-        else { let t=0; for(let i=0;i<4&&t<2;i++){ if(!fd[i] && openThree(x,y,D[i][0],D[i][1],depth)) t++; } if(t>=2) res='3·3'; }
-      }
+        else { let t=0; for(let i=0;i<4&&t<2;i++){ if(!fd[i] && openThree(x,y,D[i][0],D[i][1],depth)) t++; } if(t>=2) res='3·3'; } }
     }
     put(x,y,0); return res;
   }
+  const exactFor = c => (c===1&&st.renju)||(c===2&&!st.whiteOver);
   function winLine(x,y,c){
     for(const [dx,dy] of D){ const [b,f]=run(x,y,dx,dy,c); const n=b+f+1;
-      if(n>=5){ const exact=(c===1&&st.renju)||(c===2&&!st.whiteOver);
-        if(!exact||n===5){ const L=[]; for(let k=-b;k<=f;k++) L.push([x+dx*k,y+dy*k]); return L; } } }
+      if(n>=5 && (!exactFor(c)||n===5)){ const L=[]; for(let k=-b;k<=f;k++) L.push([x+dx*k,y+dy*k]); return L; } }
     return null;
   }
-  // ---- AI ----
+  // ---------- 모양 점수표 (9칸 줄 → 점수) ----------
   const TIERS=[
     [1e5,['011110']],
     [1e4,['11110','01111','10111','11011','11101']],
@@ -152,71 +151,168 @@ const E = (() => {
     [120,['00110','01100','01010','010010']],
     [20,['11000','00011','10100','00101','0110','1001']],
   ];
-  function lineStr(x,y,dx,dy,c){ let s=''; for(let k=-4;k<=4;k++){ if(!k){s+='1';continue;} const v=at(x+dx*k,y+dy*k); s+= v===c?'1':v===0?'0':'2'; } return s; }
   function hits(s,p){ let i=s.indexOf(p); while(i>=0){ if(i<=4&&4<i+p.length) return true; i=s.indexOf(p,i+1);} return false; }
+  const LS=new Int32Array(6561), LF=new Uint8Array(6561); // LF: 1=5목, 2=6목 이상
+  for(let code=0;code<6561;code++){
+    let s='', t=code; const dg=[]; for(let i=0;i<8;i++){ dg.unshift(t%3); t=(t/3)|0; }
+    for(let i=0;i<8;i++){ if(i===4) s+='1'; s+= dg[i]===1?'1':dg[i]===0?'0':'2'; }
+    const six=hits(s,'111111'), five=hits(s,'11111');
+    LF[code]= six?2:five?1:0;
+    let v=0; for(const [sc,ps] of TIERS){ if(ps.some(p=>hits(s,p))){ v=sc; break; } } LS[code]=v;
+  }
+  function code(x,y,dx,dy,c){ let k=0;
+    for(let i=-4;i<=4;i++){ if(!i) continue; const v=at(x+dx*i,y+dy*i); k=k*3+(v===c?1:v===0?0:2); } return k; }
   function pointScore(x,y,c){
-    const exact=(c===1&&st.renju)||(c===2&&!st.whiteOver);
-    let tot=0,fours=0,threes=0,five=false,over=false;
-    for(const [dx,dy] of D){
-      const s=lineStr(x,y,dx,dy,c);
-      const six=hits(s,'111111');
-      if(hits(s,'11111') && !(exact&&six)){ five=true; continue; }
-      if(six) over=true;
-      let v=0; for(const [sc,ps] of TIERS){ if(ps.some(p=>hits(s,p))){ v=sc; break; } }
-      if(v>=1e4) fours++; else if(v===3000) threes++;
-      tot+=v;
-    }
+    const ex=exactFor(c); let tot=0,fours=0,threes=0,five=false,over=false;
+    for(let d=0;d<4;d++){ const k=code(x,y,D[d][0],D[d][1],c); const f=LF[k];
+      if(f===1 || (f===2&&!ex)){ five=true; continue; }
+      if(f===2) over=true;
+      const v=LS[k]; if(v>=1e4) fours++; else if(v===3000) threes++; tot+=v; }
     if(five) return 1e6;
     if(c===1&&st.renju&&(over||fours+threes>=2) && forbidden(x,y,1)) return -1;
     if(fours>=2||(fours&&threes)) tot+=5e4; else if(threes>=2) tot+=2e4;
     return tot;
   }
-  function cands(){
+  function makesFive(x,y,c){ // (x,y) 빈칸에 c를 두면 5목인가
+    const ex=exactFor(c);
+    for(const [dx,dy] of D){ let f=0,b=0; while(at(x+dx*(f+1),y+dy*(f+1))===c) f++; while(at(x-dx*(b+1),y-dy*(b+1))===c) b++;
+      const n=b+f+1; if(n===5||(n>5&&!ex)) return true; }
+    return false;
+  }
+  function cands(r=2){
     const N=st.N, seen=new Uint8Array(N*N), out=[]; let any=false;
     for(let y=0;y<N;y++)for(let x=0;x<N;x++){ if(!st.B[y*N+x]) continue; any=true;
-      for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){ const X=x+dx,Y=y+dy; if(at(X,Y)===0&&!seen[Y*N+X]){seen[Y*N+X]=1;out.push([X,Y]);} } }
+      for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const X=x+dx,Y=y+dy; if(at(X,Y)===0&&!seen[Y*N+X]){seen[Y*N+X]=1;out.push([X,Y]);} } }
     if(!any) out.push([N>>1,N>>1]);
     return out;
   }
+  // 5를 완성하는 빈 칸 목록 (c 관점)
+  function fivePoints(c, near){
+    const out=[]; const N=st.N;
+    if(near){ const [x,y]=near; const seen=new Set();
+      for(const [dx,dy] of D) for(let k=-4;k<=4;k++){ if(!k) continue; const X=x+dx*k,Y=y+dy*k;
+        if(at(X,Y)===0 && !seen.has(Y*N+X)){ seen.add(Y*N+X); if(makesFive(X,Y,c)) out.push([X,Y]); } }
+      return out; }
+    for(const [X,Y] of cands(1)) if(makesFive(X,Y,c)) out.push([X,Y]);
+    return out;
+  }
+  function legal(x,y,c){ return !(c===1&&st.renju&&forbidden(x,y)); }
   function rank(c){
     const out=[];
     for(const [x,y] of cands()){ const a=pointScore(x,y,c); if(a<0) continue; let d=pointScore(x,y,3-c); if(d<0) d=0; out.push({x,y,a,d,s:a+d*0.9}); }
     return out.sort((p,q)=>q.s-p.s);
   }
-  function search(c,depth,alpha,beta,K){
-    const r=rank(c); if(!r.length) return {v:0};
-    if(r[0].a>=1e6) return {v:1e7+depth,m:r[0]};
-    if(depth===0){ let ma=0,md=0; for(const m of r){ if(m.a>ma)ma=m.a; if(m.d>md)md=m.d; } return {v:ma*1.2-md}; }
-    // 상대 5 위협이 있으면 막는 수만 본다
-    const must=r.filter(m=>m.d>=1e6); const list=(must.length?must:r).slice(0,K);
-    let best=-Infinity,bm=list[0];
-    for(const m of list){ put(m.x,m.y,c); const v=-search(3-c,depth-1,-beta,-alpha,K).v; put(m.x,m.y,0);
-      if(v>best){best=v;bm=m;} if(best>alpha) alpha=best; if(alpha>=beta) break; }
-    return {v:best,m:bm};
+  // ---------- VCF: 연속 4로 이기는 수순 찾기 ----------
+  let deadline=Infinity, nodes=0;
+  function vcf(c, depth){
+    if(depth<=0 || Date.now()>deadline) return null;
+    const o=3-c;
+    for(const m of cands(1)){
+      const [x,y]=m; if(pointScore(x,y,c) < 1e4) continue;           // 4를 만들지 못하면 제외
+      if(c===1&&st.renju&&forbidden(x,y)) continue;
+      put(x,y,c); nodes++;
+      const w=fivePoints(c,[x,y]);
+      let ok=null;
+      if(w.length>=2) ok=[[x,y]];
+      else if(w.length===1){
+        const [rx,ry]=w[0];
+        if(o===1&&st.renju&&forbidden(rx,ry)) ok=[[x,y]];            // 흑이 금수라 못 막음
+        else { put(rx,ry,o);
+          const oppFive = makesFiveAny(o,[rx,ry]);
+          if(!oppFive){ const sub=vcf(c,depth-1); if(sub) ok=[[x,y],...sub]; }
+          put(rx,ry,0); }
+      }
+      put(x,y,0);
+      if(ok) return ok;
+    }
+    return null;
+  }
+  function makesFiveAny(c,near){ return fivePoints(c,near).length>0; }
+  // ---------- 알파베타 ----------
+  const WIN=1e8;
+  function evalSide(c){ // 둘 차례 c 관점
+    let ma=0,md=0; for(const [x,y] of cands(2)){ const a=pointScore(x,y,c); const d=pointScore(x,y,3-c); if(a>ma)ma=a; if(d>md)md=d; }
+    return ma*1.2-md;
+  }
+  function moves(c,K){
+    const o=3-c;
+    const myFive=fivePoints(c); const legalFive=myFive.filter(([x,y])=>legal(x,y,c));
+    if(legalFive.length) return {win:legalFive[0]};
+    const opFive=fivePoints(o).filter(([x,y])=>legal(x,y,o));
+    const r=rank(c);
+    if(opFive.length){ const set=new Set(opFive.map(([x,y])=>x+','+y));
+      const blk=r.filter(m=>set.has(m.x+','+m.y)); return {list:blk, lose: opFive.length>=2&&blk.length<=1 ? true:false}; }
+    return {list:r.slice(0,K)};
+  }
+  function ab(c,depth,alpha,beta,K){
+    nodes++;
+    const mv=moves(c,K);
+    if(mv.win) return WIN+depth;
+    if(!mv.list.length) return -WIN;
+    if(depth===0) return evalSide(c);
+    if(Date.now()>deadline) throw 'T';
+    let best=-Infinity;
+    for(const m of mv.list){ put(m.x,m.y,c); let v;
+      try{ v=-ab(3-c,depth-1,-beta,-alpha,K); } finally { put(m.x,m.y,0); }
+      if(v>best) best=v; if(best>alpha) alpha=best; if(alpha>=beta) break; }
+    return best;
+  }
+  function think(c,ms,maxDepth,K){
+    deadline=Date.now()+ms; nodes=0; const o=3-c;
+    const mv=moves(c,K+4);
+    if(mv.win) return {x:mv.win[0],y:mv.win[1],why:'win'};
+    let list=mv.list; if(!list.length) return null;
+    if(list.length===1) return list[0];
+    // 1) 내 VCF
+    if(!fivePoints(o).length){ const seq=vcf(c,12); if(seq) return {x:seq[0][0],y:seq[0][1],why:'vcf'}; }
+    // 2) 상대 VCF를 허용하는 수 거르기
+    deadline=Date.now()+ms;
+    const safe=[];
+    for(const m of list){ put(m.x,m.y,c); const t=vcf(o,10); put(m.x,m.y,0); if(!t) safe.push(m); if(Date.now()>deadline-ms*0.5) break; }
+    if(safe.length) list=safe;
+    // 3) 반복 심화 알파베타
+    let bestM=list[0];
+    for(let d=2; d<=maxDepth; d+=1){
+      let alpha=-Infinity, cur=null, curV=-Infinity;
+      try{
+        for(const m of list){ put(m.x,m.y,c); let v; try{ v=-ab(o,d-1,-Infinity,-alpha,K); } finally{ put(m.x,m.y,0); }
+          if(v>curV){curV=v;cur=m;} if(v>alpha) alpha=v; }
+      }catch(e){ if(e==='T') break; throw e; }
+      if(cur){ bestM=cur; list=[cur,...list.filter(m=>m!==cur)]; }
+      if(curV>=WIN) break;
+    }
+    return bestM;
   }
   function aiMove(c,level){
     let r=rank(c); if(c===1&&st.renju) r=r.filter(m=>!forbidden(m.x,m.y));
     if(!r.length) return null;
-    if(level===0){ if(r[0].a>=1e6&&Math.random()<.7) return r[0]; return r[Math.floor(Math.random()**2*Math.min(6,r.length))]; }
-    if(level===1){ if(r[0].a>=1e6||r[0].d>=1e6||r[0].a>=1e5) return r[0]; return (r.length>1&&Math.random()<.25)?r[1]:r[0]; }
-    const res = level===2 ? search(c,2,-Infinity,Infinity,9) : search(c,4,-Infinity,Infinity,6);
-    let m=res.m||r[0];
-    if(c===1&&st.renju&&forbidden(m.x,m.y)) m=r[0];
-    return m;
+    const o=3-c;
+    if(level===0){ // 쉬움: 5는 거의 두고, 막기는 가끔 놓침
+      const w=fivePoints(c).find(([x,y])=>legal(x,y,c)); if(w&&Math.random()<.85) return {x:w[0],y:w[1]};
+      const b=fivePoints(o).find(([x,y])=>legal(x,y,c)); if(b&&Math.random()<.75) return {x:b[0],y:b[1]};
+      return r[Math.floor(Math.random()**1.6*Math.min(8,r.length))];
+    }
+    if(level===1){ const m=think(c,400,3,8); return m||r[0]; }
+    const m=think(c,1800,10,9); return m||r[0];
   }
-  return { st, at, put, reset, forbidden, winLine, aiMove };
+  return { st, at, put, reset, forbidden, winLine, aiMove, pointScore, rank };
 })();
 if (typeof module!=='undefined') module.exports=E;
 
+</script>
+<script>
+// ---- 엔진 (브라우저/노드 공용) ----
+const E=new Function(document.getElementById('engsrc').textContent+';return E;')();
+
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const cfg=Object.assign({size:15,renju:true,show:true,whiteOver:true,ai:true,human:1,level:1},store.get('omokR.cfg',{}));
-cfg.ai=false;
+const cfg=Object.assign({size:15,renju:true,show:true,whiteOver:true,ai:false,human:1,level:1},store.get('omokR2.cfg',{}));
+if(cfg.level>2)cfg.level=2;
 let score=Object.assign({me:0,ai:0,b:0,w:0},store.get('omokR.score',{}));
 let moves=[],turn=1,over=false,win=null,thinking=false,forb=new Map(),hover=null,gen=0;
 
 function applyCfg(){E.st.renju=cfg.renju;E.st.whiteOver=cfg.whiteOver;}
-function newGame(){gen++;applyCfg();E.reset(cfg.size);moves=[];turn=1;over=false;win=null;thinking=false;hover=null;refresh();maybeAI();}
+function newGame(){if(thinking&&worker){worker.terminate();pend.clear();worker=mkWorker();}gen++;applyCfg();E.reset(cfg.size);moves=[];turn=1;over=false;win=null;thinking=false;hover=null;refresh();maybeAI();}
 const aiTurn=()=>cfg.ai&&turn!==cfg.human;
 function calcForb(){forb.clear();if(!cfg.renju||over||turn!==1||aiTurn())return;const N=cfg.size;
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){const f=E.forbidden(x,y);if(f)forb.set(y*N+x,f);}}
@@ -253,10 +349,23 @@ function finish(c){
   $('eT').textContent=t;$('eP').textContent=p;
   setTimeout(()=>$('mEnd').classList.add('show'),650);
 }
+let worker=null,wid=0;const pend=new Map();
+function mkWorker(){try{const src=document.getElementById('engsrc').textContent+`
+onmessage=e=>{const d=e.data;E.st.renju=d.renju;E.st.whiteOver=d.whiteOver;E.reset(d.N);E.st.B.set(d.B);
+let m=null;try{m=E.aiMove(d.c,d.level);}catch(err){}postMessage({id:d.id,m:m&&{x:m.x,y:m.y}});};`;
+  const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
+  w.onmessage=e=>{const r=pend.get(e.data.id);if(r){pend.delete(e.data.id);r(e.data.m);}};
+  w.onerror=()=>{worker=null;for(const [,r] of pend)r('fallback');pend.clear();};return w;}catch(e){return null;}}
+worker=mkWorker();
+function askAI(c,level){return new Promise(res=>{
+  const local=()=>setTimeout(()=>{let m=null;try{m=E.aiMove(c,level);}catch(e){}res(m);},30);
+  if(!worker){local();return;}
+  const id=++wid;pend.set(id,m=>m==='fallback'?local():res(m));
+  worker.postMessage({id,c,level,N:cfg.size,B:E.st.B,renju:cfg.renju,whiteOver:cfg.whiteOver});});}
 function maybeAI(){
-  if(over||!aiTurn())return;thinking=true;refresh();const g=gen;
-  setTimeout(()=>{if(g!==gen)return;const m=E.aiMove(turn,cfg.level);thinking=false;
-    if(m)place(m.x,m.y);else{over=true;finish(0);refresh();}},cfg.level>=2?60:350);
+  if(over||!aiTurn())return;thinking=true;refresh();const g=gen,c=turn,t0=Date.now();
+  askAI(c,cfg.level).then(m=>{const wait=Math.max(0,350-(Date.now()-t0));setTimeout(()=>{if(g!==gen)return;thinking=false;
+    if(m&&E.at(m.x,m.y)===0){if(!place(m.x,m.y))refresh();}else{over=true;finish(0);refresh();}},wait);});
 }
 function undo(){
   if(thinking||over||!moves.length)return;
@@ -304,14 +413,15 @@ cv.addEventListener('pointerleave',()=>{hover=null;draw();});
 
 // ---- 설정 ----
 function syncSet(){document.querySelectorAll('.seg').forEach(sg=>sg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',String(cfg[sg.dataset.k])===b.dataset.v)));
-  $('cRenju').checked=cfg.renju;$('cShow').checked=cfg.show;$('cWOver').checked=cfg.whiteOver;
+  $('cRenju').checked=cfg.renju;$('cAI').checked=cfg.ai;$('rColor').classList.toggle('off',!cfg.ai);$('rLv').classList.toggle('off',!cfg.ai);$('cShow').checked=cfg.show;$('cWOver').checked=cfg.whiteOver;
   $('rShow').classList.toggle('off',!cfg.renju);}
 let needNew=false;
 document.querySelectorAll('.seg').forEach(sg=>sg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=sg.dataset.k,v=+b.dataset.v;
-  if(cfg[k]===v)return;cfg[k]=v;if(k!=='level')needNew=true;store.set('omokR.cfg',cfg);syncSet();}));
-$('cRenju').onchange=e=>{cfg.renju=e.target.checked;needNew=true;store.set('omokR.cfg',cfg);syncSet();};
-$('cShow').onchange=e=>{cfg.show=e.target.checked;store.set('omokR.cfg',cfg);syncSet();draw();};
-$('cWOver').onchange=e=>{cfg.whiteOver=e.target.checked;needNew=true;store.set('omokR.cfg',cfg);syncSet();};
+  if(cfg[k]===v)return;cfg[k]=v;if(k!=='level')needNew=true;store.set('omokR2.cfg',cfg);syncSet();}));
+$('cRenju').onchange=e=>{cfg.renju=e.target.checked;needNew=true;store.set('omokR2.cfg',cfg);syncSet();};
+$('cAI').onchange=e=>{cfg.ai=e.target.checked;needNew=true;store.set('omokR2.cfg',cfg);syncSet();};
+$('cShow').onchange=e=>{cfg.show=e.target.checked;store.set('omokR2.cfg',cfg);syncSet();draw();};
+$('cWOver').onchange=e=>{cfg.whiteOver=e.target.checked;needNew=true;store.set('omokR2.cfg',cfg);syncSet();};
 $('bSet').onclick=()=>{needNew=false;syncSet();$('mSet').classList.add('show');};
 $('bClose').onclick=()=>{$('mSet').classList.remove('show');if(needNew){newGame();resize();}else refresh();};
 $('bReset').onclick=()=>{score={me:0,ai:0,b:0,w:0};store.set('omokR.score',score);refresh();toast('승수를 초기화했어요');};
