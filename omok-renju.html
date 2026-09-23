@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>오목 렌주룰 AI 대전</title>
+<title>오목 렌주룰</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -63,11 +63,11 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none
 <body>
 <header>
   <h1>오목<small>렌주룰</small></h1>
-  <div class="score" aria-live="polite"><span class="lbl" id="sL">나</span><span id="sA">0</span>:<span id="sB">0</span><span class="lbl" id="sR">AI</span></div>
+  <div class="score" aria-live="polite"><span class="lbl" id="sL">흑</span><span id="sA">0</span>:<span id="sB">0</span><span class="lbl" id="sR">백</span></div>
 </header>
 <div class="players">
-  <div class="pl b" id="pB"><i></i><b>흑</b><em id="nB">나</em></div>
-  <div class="pl w" id="pW"><i></i><b>백</b><em id="nW">AI</em></div>
+  <div class="pl b" id="pB"><i></i><b>흑</b><em id="nB">차례</em></div>
+  <div class="pl w" id="pW"><i></i><b>백</b><em id="nW"></em></div>
 </div>
 <main><div id="wrap"><canvas id="cv" aria-label="오목판"></canvas></div></main>
 <div class="legend" id="legend">흑은 <b>✕</b> 자리(3·3, 4·4, 장목)에 둘 수 없어요</div>
@@ -88,11 +88,8 @@ input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none
   <div class="row"><div>흑 금수<small>흑은 3·3, 4·4, 장목(6목 이상) 금지</small></div><input type="checkbox" id="cRenju"></div>
   <div class="row sub" id="rShow"><div>금수 자리 표시<small>흑 차례에 둘 수 없는 곳을 ✕로 표시</small></div><input type="checkbox" id="cShow"></div>
   <div class="row"><div>백 장목 승리 인정<small>끄면 백도 정확히 5목만 승리</small></div><input type="checkbox" id="cWOver"></div>
-  <div class="row"><div>🤖 AI 대전</div><input type="checkbox" id="cAI"></div>
-  <div class="row sub" id="rColor"><div>내 돌 색</div><div class="seg" data-k="human"><button data-v="1">흑 (선공)</button><button data-v="2">백 (후공)</button></div></div>
-  <div class="row sub" id="rLv"><div>AI 난이도</div><div class="seg" data-k="level"><button data-v="0">쉬움</button><button data-v="1">보통</button><button data-v="2">어려움</button><button data-v="3">최강</button></div></div>
   <div class="acts"><button id="bReset">승수 초기화</button><button class="primary" id="bClose">닫기</button></div>
-  <p style="font-size:.78rem;text-align:left;margin:12px 0 0">판 크기, AI 대전, 돌 색을 바꾸면 새 판이 시작돼요.</p>
+  <p style="font-size:.78rem;text-align:left;margin:12px 0 0">판 크기나 규칙을 바꾸면 새 판이 시작돼요.</p>
 </div></div>
 <script>
 // ---- 엔진 (브라우저/노드 공용) ----
@@ -214,6 +211,7 @@ if (typeof module!=='undefined') module.exports=E;
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const cfg=Object.assign({size:15,renju:true,show:true,whiteOver:true,ai:true,human:1,level:1},store.get('omokR.cfg',{}));
+cfg.ai=false;
 let score=Object.assign({me:0,ai:0,b:0,w:0},store.get('omokR.score',{}));
 let moves=[],turn=1,over=false,win=null,thinking=false,forb=new Map(),hover=null,gen=0;
 
@@ -306,15 +304,14 @@ cv.addEventListener('pointerleave',()=>{hover=null;draw();});
 
 // ---- 설정 ----
 function syncSet(){document.querySelectorAll('.seg').forEach(sg=>sg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',String(cfg[sg.dataset.k])===b.dataset.v)));
-  $('cRenju').checked=cfg.renju;$('cShow').checked=cfg.show;$('cWOver').checked=cfg.whiteOver;$('cAI').checked=cfg.ai;
-  $('rShow').classList.toggle('off',!cfg.renju);$('rColor').classList.toggle('off',!cfg.ai);$('rLv').classList.toggle('off',!cfg.ai);}
+  $('cRenju').checked=cfg.renju;$('cShow').checked=cfg.show;$('cWOver').checked=cfg.whiteOver;
+  $('rShow').classList.toggle('off',!cfg.renju);}
 let needNew=false;
 document.querySelectorAll('.seg').forEach(sg=>sg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=sg.dataset.k,v=+b.dataset.v;
   if(cfg[k]===v)return;cfg[k]=v;if(k!=='level')needNew=true;store.set('omokR.cfg',cfg);syncSet();}));
 $('cRenju').onchange=e=>{cfg.renju=e.target.checked;needNew=true;store.set('omokR.cfg',cfg);syncSet();};
 $('cShow').onchange=e=>{cfg.show=e.target.checked;store.set('omokR.cfg',cfg);syncSet();draw();};
 $('cWOver').onchange=e=>{cfg.whiteOver=e.target.checked;needNew=true;store.set('omokR.cfg',cfg);syncSet();};
-$('cAI').onchange=e=>{cfg.ai=e.target.checked;needNew=true;store.set('omokR.cfg',cfg);syncSet();};
 $('bSet').onclick=()=>{needNew=false;syncSet();$('mSet').classList.add('show');};
 $('bClose').onclick=()=>{$('mSet').classList.remove('show');if(needNew){newGame();resize();}else refresh();};
 $('bReset').onclick=()=>{score={me:0,ai:0,b:0,w:0};store.set('omokR.score',score);refresh();toast('승수를 초기화했어요');};
